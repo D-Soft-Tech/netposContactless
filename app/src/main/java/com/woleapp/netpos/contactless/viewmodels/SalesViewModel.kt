@@ -96,7 +96,7 @@ class SalesViewModel @Inject constructor() : ViewModel() {
 
     fun makePayment(
         context: Context,
-        transactionType: com.danbamitale.epmslib.entities.TransactionType = com.danbamitale.epmslib.entities.TransactionType.PURCHASE
+        transactionType: TransactionType = TransactionType.PURCHASE
     ) {
         Timber.e(cardData.toString())
         val configData = NetPosTerminalConfig.getConfigData() ?: kotlin.run {

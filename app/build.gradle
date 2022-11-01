@@ -274,4 +274,7 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-messaging-ktx:23.0.8'
 
+    // Alerter
+    implementation 'com.tapadoo.android:alerter:2.0.4'
+
 }

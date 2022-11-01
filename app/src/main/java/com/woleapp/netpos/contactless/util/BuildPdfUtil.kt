@@ -16,6 +16,7 @@ import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import com.danbamitale.epmslib.entities.TransactionResponse
+import com.danbamitale.epmslib.entities.responseMessage
 import com.woleapp.netpos.contactless.BuildConfig
 import com.woleapp.netpos.contactless.R
 import com.woleapp.netpos.contactless.databinding.LayoutPosReceiptPdfBinding
@@ -209,6 +210,7 @@ private fun initViewsForPosReceipt(
                 Singletons.getCurrentlyLoggedInUser()?.business_name
                     ?: "${BuildConfig.FLAVOR} POS MERCHANT"
             )
+            rrn.text = pdfView.root.context.getString(R.string.rrn_place_holder, it.RRN)
             terminalIdPlaceHolder.text =
                 pdfView.appVersion.context.getString(
                     R.string.terminal_id_place_holder,
@@ -245,7 +247,7 @@ private fun initViewsForPosReceipt(
                 )
             message.text = pdfView.appVersion.context.getString(
                 R.string.message_place_holder,
-                it.otherId
+                it.responseMessage
             )
             cardType.text =
                 pdfView.appVersion.context.getString(R.string.card_type_place_holder, it.cardLabel)

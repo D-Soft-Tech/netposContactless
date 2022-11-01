@@ -4,14 +4,18 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/firstbank/res/layout/dialog_transaction_result.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/drawable/ic_alert.xml" value="0.1865" />
         <entry key="app/src/main/res/layout/dialog_transaction_result.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/fragment_transaction_details.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/fragment_transaction_history.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/layout_pos_receipt_pdf.xml" value="0.30885416666666665" />
+        <entry key="app/src/main/res/layout/layout_print_end_of_day.xml" value="0.1" />
         <entry key="app/src/main/res/layout/layout_qr_receipt_pdf.xml" value="0.2777777777777778" />
         <entry key="app/src/main/res/layout/layout_randomized_pin_block.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/layout_receipt_pdf.xml" value="0.335" />
         <entry key="app/src/main/res/layout/layout_service_item.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/layout/layout_verve_card_qr_amount_dialog.xml" value="0.2947916666666667" />
+        <entry key="app/src/main/res/layout/qr_bottom_sheet_dialog.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/transaction_status_modal.xml" value="0.3098958333333333" />
         <entry key="app/src/main/res/xml/preferences.xml" value="0.3098958333333333" />
       </map>

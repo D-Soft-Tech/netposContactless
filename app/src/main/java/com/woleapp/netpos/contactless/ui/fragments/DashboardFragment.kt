@@ -12,7 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
-import com.danbamitale.epmslib.entities.*
+import com.danbamitale.epmslib.entities.* // ktlint-disable no-wildcard-imports
 import com.danbamitale.epmslib.entities.TransactionResponse
 import com.danbamitale.epmslib.extensions.formatCurrencyAmount
 import com.danbamitale.epmslib.processors.TransactionProcessor
@@ -24,10 +24,10 @@ import com.woleapp.netpos.contactless.adapter.ServiceAdapter
 import com.woleapp.netpos.contactless.database.AppDatabase
 import com.woleapp.netpos.contactless.databinding.FragmentDashboardBinding
 import com.woleapp.netpos.contactless.databinding.LayoutPrintEndOfDayBinding
-import com.woleapp.netpos.contactless.model.*
+import com.woleapp.netpos.contactless.model.* // ktlint-disable no-wildcard-imports
 import com.woleapp.netpos.contactless.mqtt.MqttHelper
 import com.woleapp.netpos.contactless.nibss.NetPosTerminalConfig
-import com.woleapp.netpos.contactless.util.*
+import com.woleapp.netpos.contactless.util.* // ktlint-disable no-wildcard-imports
 import com.woleapp.netpos.contactless.viewmodels.NfcCardReaderViewModel
 import com.woleapp.netpos.contactless.viewmodels.TransactionsViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -315,7 +315,9 @@ class DashboardFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
+        val partnerId = Singletons.getCurrentlyLoggedInUser()?.partnerId ?: "nothing_here"
         val pref = Prefs.getString(PREF_PRINTER_SETTINGS, "nothing comes")
         Timber.d("THE_PREFS_GOTTEN======>%s", pref)
+        Timber.d("THE_PARTNER_ID_GOTTEN======>%s", partnerId)
     }
 }

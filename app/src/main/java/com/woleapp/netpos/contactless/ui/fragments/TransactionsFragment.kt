@@ -1,21 +1,14 @@
 package com.woleapp.netpos.contactless.ui.fragments
 
-import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.danbamitale.epmslib.entities.TransactionType
-import com.google.gson.Gson
-import com.netpluspay.netposbarcodesdk.RESULT_CODE_TEXT
 import com.woleapp.netpos.contactless.BuildConfig
 import com.woleapp.netpos.contactless.R
 import com.woleapp.netpos.contactless.adapter.ServiceAdapter
@@ -24,10 +17,13 @@ import com.woleapp.netpos.contactless.databinding.LayoutPreauthDialogBinding
 import com.woleapp.netpos.contactless.databinding.LayoutVerveCardQrAmountDialogBinding
 import com.woleapp.netpos.contactless.databinding.QrAmoutDialogBinding
 import com.woleapp.netpos.contactless.model.PostQrToServerModel
-import com.woleapp.netpos.contactless.model.QrCardReadResultModel
 import com.woleapp.netpos.contactless.model.QrScannedDataModel
 import com.woleapp.netpos.contactless.model.Service
 import com.woleapp.netpos.contactless.ui.dialog.LoadingDialog
+import com.woleapp.netpos.contactless.ui.dialog.QrPasswordPinBlockDialog
+import com.woleapp.netpos.contactless.util.AppConstants.PIN_BLOCK_BK
+import com.woleapp.netpos.contactless.util.AppConstants.PIN_BLOCK_RK
+import com.woleapp.netpos.contactless.util.AppConstants.STRING_PIN_BLOCK_DIALOG_TAG
 import com.woleapp.netpos.contactless.util.AppConstants.STRING_QR_READ_RESULT_BUNDLE_KEY
 import com.woleapp.netpos.contactless.util.AppConstants.STRING_QR_READ_RESULT_REQUEST_KEY
 import com.woleapp.netpos.contactless.util.AppConstants.getGUID
@@ -47,13 +43,15 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
     private lateinit var adapter: ServiceAdapter
     private var _binding: FragmentTransactionsBinding? = null
     private val binding get() = _binding!!
-    private lateinit var resultLauncher: ActivityResultLauncher<Intent>
     private val scanQrViewModel by activityViewModels<ScanQrViewModel>()
-    private lateinit var qrAmoutDialogBinding: QrAmoutDialogBinding
-    private lateinit var verveCardQrAmoutDialogBinding: LayoutVerveCardQrAmountDialogBinding
+    private lateinit var qrAmountDialogBinding: QrAmoutDialogBinding
+    private lateinit var verveCardQrAmountDialogBinding: LayoutVerveCardQrAmountDialogBinding
     private lateinit var qrAmountDialog: androidx.appcompat.app.AlertDialog
     private lateinit var qrAmountDialogForVerveCard: androidx.appcompat.app.AlertDialog
+    private val qrPinBlock: QrPasswordPinBlockDialog = QrPasswordPinBlockDialog()
     private lateinit var requestNarration: String
+    private var amountToPayInDouble: Double? = 0.0
+    private var qrData: QrScannedDataModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,41 +64,25 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
             STRING_QR_READ_RESULT_REQUEST_KEY,
             requireActivity()
         ) { _, bundle ->
-            val data = bundle.getParcelable<QrScannedDataModel>(STRING_QR_READ_RESULT_BUNDLE_KEY)
-            data?.let {
+            qrData = bundle.getParcelable<QrScannedDataModel>(STRING_QR_READ_RESULT_BUNDLE_KEY)
+            qrData?.let {
                 if (it.card_scheme.contains(
                         "verve",
                         true
                     )
-                ) showAmountDialogForVerveCard(it) else showAmountDialog(it)
+                ) showAmountDialogForVerveCard() else showAmountDialog(it)
             }
         }
 
-        resultLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    val data: Intent? = result.data
-                    data?.let {
-                        if (it.hasExtra(RESULT_CODE_TEXT)) {
-                            val text = it.getStringExtra(RESULT_CODE_TEXT)
-                            Toast.makeText(
-                                requireContext(),
-                                getString(R.string.qr_scanned),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            text?.let { qrCardData ->
-                                val qrReadResult =
-                                    Gson().fromJson(qrCardData, QrCardReadResultModel::class.java)
-                                val scannedData =
-                                    QrScannedDataModel(card_scheme = "", qrReadResult.data)
-//                                showAmountDialog(qrReadResult.data)
-                            }
-                        }
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "scan failed", Toast.LENGTH_SHORT).show()
-                }
+        requireActivity().supportFragmentManager.setFragmentResultListener(
+            PIN_BLOCK_RK,
+            requireActivity()
+        ) { _, bundle ->
+            val pinFromPinBlockDialog = bundle.getString(PIN_BLOCK_BK)
+            pinFromPinBlockDialog?.let {
+                qrData?.let { it1 -> formatPinAndSendToServer(it, amountToPayInDouble, it1) }
             }
+        }
     }
 
     override fun onCreateView(
@@ -138,13 +120,13 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
             }
         }
 
-        qrAmoutDialogBinding = QrAmoutDialogBinding.inflate(inflater, null, false)
+        qrAmountDialogBinding = QrAmoutDialogBinding.inflate(inflater, null, false)
             .apply {
                 executePendingBindings()
                 lifecycleOwner = viewLifecycleOwner
             }
 
-        verveCardQrAmoutDialogBinding =
+        verveCardQrAmountDialogBinding =
             LayoutVerveCardQrAmountDialogBinding.inflate(inflater, null, false)
                 .apply {
                     executePendingBindings()
@@ -152,12 +134,12 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
                 }
 
         qrAmountDialog = androidx.appcompat.app.AlertDialog.Builder(requireContext()).apply {
-            setView(qrAmoutDialogBinding.root)
+            setView(qrAmountDialogBinding.root)
         }.create()
 
         qrAmountDialogForVerveCard =
             androidx.appcompat.app.AlertDialog.Builder(requireContext()).apply {
-                setView(verveCardQrAmoutDialogBinding.root)
+                setView(verveCardQrAmountDialogBinding.root)
             }.create()
 
         return binding.root
@@ -218,12 +200,12 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
 
     private fun showAmountDialog(qrData: QrScannedDataModel) {
         qrAmountDialog.show()
-        qrAmoutDialogBinding.proceed.setOnClickListener {
-            val amountDouble = qrAmoutDialogBinding.amount.text.toString().toDoubleOrNull()
-            if (qrAmoutDialogBinding.amount.text.isNullOrEmpty()) qrAmoutDialogBinding.amount.error =
+        qrAmountDialogBinding.proceed.setOnClickListener {
+            val amountDouble = qrAmountDialogBinding.amount.text.toString().toDoubleOrNull()
+            if (qrAmountDialogBinding.amount.text.isNullOrEmpty()) qrAmountDialogBinding.amount.error =
                 getString(R.string.amount_empty)
             amountDouble?.let {
-                qrAmoutDialogBinding.amount.text?.clear()
+                qrAmountDialogBinding.amount.text?.clear()
                 qrAmountDialog.cancel()
                 val qrDataToSendToBackend =
                     PostQrToServerModel(
@@ -247,44 +229,50 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
         }
     }
 
-    private fun showAmountDialogForVerveCard(qrData: QrScannedDataModel) {
+    private fun showAmountDialogForVerveCard() {
         qrAmountDialogForVerveCard.show()
-        verveCardQrAmoutDialogBinding.proceed.setOnClickListener {
-            if (verveCardQrAmoutDialogBinding.amount.text.isNullOrEmpty()) {
-                verveCardQrAmoutDialogBinding.amount.error = getString(R.string.amount_empty)
+        verveCardQrAmountDialogBinding.proceed.setOnClickListener {
+            if (verveCardQrAmountDialogBinding.amount.text.isNullOrEmpty()) {
+                verveCardQrAmountDialogBinding.amount.error = getString(R.string.amount_empty)
             }
-            if (verveCardQrAmoutDialogBinding.pin.text.isNullOrEmpty()) {
-                verveCardQrAmoutDialogBinding.pin.error = getString(R.string.enter_pin)
-            }
-            val amountDouble = verveCardQrAmoutDialogBinding.amount.text.toString().toDoubleOrNull()
-            verveCardQrAmoutDialogBinding.pin.text.toString().trim().let { pin ->
-                val formattedPadding = stringToBase64(pin).removeSuffix('\n'.toString())
-                if (pin.length == 4) {
-                    amountDouble?.let {
-                        verveCardQrAmoutDialogBinding.amount.text?.clear()
-                        verveCardQrAmoutDialogBinding.pin.text?.clear()
-                        qrAmountDialogForVerveCard.cancel()
-                        val qrDataToSendToBackend =
-                            PostQrToServerModel(
-                                it,
-                                qrData.data,
-                                merchantId = BuildConfig.STRING_MERCHANT_ID,
-                                padding = formattedPadding,
-                                narration = requestNarration
-                            )
-                        scanQrViewModel.setScannedQrIsVerveCard(true)
-                        scanQrViewModel.saveTheQrToSharedPrefs(qrDataToSendToBackend.copy(orderId = getGUID()))
-                        scanQrViewModel.postScannedQrRequestToServer(qrDataToSendToBackend)
-                        observeServerResponse(
-                            scanQrViewModel.sendQrToServerResponseVerve,
-                            LoadingDialog(),
-                            requireActivity().supportFragmentManager
-                        ) {
-                            addFragmentWithoutRemove(
-                                EnterOtpFragment()
-                            )
-                        }
-                    }
+            val amountDouble =
+                verveCardQrAmountDialogBinding.amount.text.toString().toDoubleOrNull()
+            amountToPayInDouble = amountDouble
+            verveCardQrAmountDialogBinding.amount.text?.clear()
+            qrAmountDialogForVerveCard.cancel()
+            qrAmountDialogForVerveCard.dismiss()
+            qrPinBlock.show(requireActivity().supportFragmentManager, STRING_PIN_BLOCK_DIALOG_TAG)
+        }
+    }
+
+    private fun formatPinAndSendToServer(
+        pin: String,
+        amountDouble: Double?,
+        qrData: QrScannedDataModel
+    ) {
+        val formattedPadding = stringToBase64(pin).removeSuffix('\n'.toString())
+        if (pin.length == 4) {
+            amountDouble?.let {
+                qrAmountDialogForVerveCard.cancel()
+                val qrDataToSendToBackend =
+                    PostQrToServerModel(
+                        it,
+                        qrData.data,
+                        merchantId = BuildConfig.STRING_MERCHANT_ID,
+                        padding = formattedPadding,
+                        narration = requestNarration
+                    )
+                scanQrViewModel.setScannedQrIsVerveCard(true)
+                scanQrViewModel.saveTheQrToSharedPrefs(qrDataToSendToBackend.copy(orderId = getGUID()))
+                scanQrViewModel.postScannedQrRequestToServer(qrDataToSendToBackend)
+                observeServerResponse(
+                    scanQrViewModel.sendQrToServerResponseVerve,
+                    LoadingDialog(),
+                    requireActivity().supportFragmentManager
+                ) {
+                    addFragmentWithoutRemove(
+                        EnterOtpFragment()
+                    )
                 }
             }
         }

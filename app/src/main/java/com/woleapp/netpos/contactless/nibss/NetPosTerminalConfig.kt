@@ -7,11 +7,14 @@ import android.text.format.DateUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.danbamitale.epmslib.entities.* // ktlint-disable no-wildcard-imports
+import com.danbamitale.epmslib.entities.ConfigData
+import com.danbamitale.epmslib.entities.ConnectionData
+import com.danbamitale.epmslib.entities.KeyHolder
+import com.danbamitale.epmslib.entities.clearSessionKey
 import com.danbamitale.epmslib.processors.TerminalConfigurator
 import com.pixplicity.easyprefs.library.Prefs
 import com.woleapp.netpos.contactless.model.ConfigurationData
-import com.woleapp.netpos.contactless.util.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.util.*
 import com.woleapp.netpos.contactless.util.Singletons.getSavedConfigurationData
 import com.woleapp.netpos.contactless.util.Singletons.gson
 import io.reactivex.Single
@@ -52,11 +55,12 @@ class NetPosTerminalConfig {
         private var terminalConfigurator: TerminalConfigurator =
             TerminalConfigurator(connectionData)
 
+        // fun getTerminalId() = "20398A4C"    // NIBSS TEST ENVIRONMENT
         fun getTerminalId() = terminalId ?: ""
 
         private fun setTerminalId() {
             terminalId = Singletons.getCurrentlyLoggedInUser()?.terminal_id
-//            terminalId = "20398A4C"
+            // terminalId = "20398A4C"      // NIBSS TEST ENVIRONMENT
         }
 
         private var keyHolder: KeyHolder? = null

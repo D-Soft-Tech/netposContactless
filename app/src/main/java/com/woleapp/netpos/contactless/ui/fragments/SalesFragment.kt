@@ -103,14 +103,13 @@ class SalesFragment : BaseFragment() {
         }
         viewModel.message.observe(viewLifecycleOwner) {
             it.getContentIfNotHandled()?.let { s ->
-                showSnackBar(s)
+                if (s.contains("Transaction")) {
+                    nfcCardReaderViewModel.setLastPosTransactionResponse(viewModel.lastPosTransaction.value!!)
+                    showAlerter(binding.root, requireActivity(), s)
+                }
             }
         }
-        /*viewModel.getCardData.observe(viewLifecycleOwner){event ->
-            event.getContentIfNotHandled()?.let {
-                quickPay()
-            }
-        }*/
+
         viewModel.getCardData.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let { shouldGetCardData ->
                 if (shouldGetCardData) {
@@ -206,22 +205,6 @@ class SalesFragment : BaseFragment() {
 
         return binding.root
     }
-
-    /*private fun quickPay() {
-        viewModel.setAccountType(IsoAccountType.SAVINGS)
-        viewModel.cardData = CardData(
-            track2Data = "5199110748591994D2012221000013772F",
-            nibssIccSubset = "9F26087BCB3647E84652A29F2701809F10120110A040002A0400000000000000000000FF9F370451271F779F360201E3950500802480009A032009179C01009F02060000000010005F2A020566820239009F1A0205669F34034203009F3303E0F9C89F3501229F1E0831323334353637388407A00000000410109F090200009F03060000000000005F340100",
-            panSequenceNumber = "000",
-            posEntryMode = "051"
-        ).apply {
-            pinBlock = TripleDES.encrypt(
-                "0425A8EF8B7A6E66",
-                NetPosTerminalConfig.getKeyHolder()!!.clearPinKey
-            )
-        }
-        viewModel.makePayment(requireContext(), transactionType)
-    }*/
 
     /*private fun quickPay() {
         viewModel.setAccountType(IsoAccountType.SAVINGS)

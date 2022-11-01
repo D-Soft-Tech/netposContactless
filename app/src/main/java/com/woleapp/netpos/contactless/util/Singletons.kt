@@ -9,7 +9,6 @@ import com.woleapp.netpos.contactless.model.ConfigurationData
 import com.woleapp.netpos.contactless.model.NibssResponse
 import com.woleapp.netpos.contactless.model.User
 import com.woleapp.netpos.contactless.nibss.Keys
-import java.lang.Exception
 
 fun useStormTerminalId() = Prefs.getBoolean(PREF_USE_STORM_TERMINAL_ID, true)
 fun TransactionResponse.toNibssResponse(remark: String? = null): NibssResponse =
@@ -40,22 +39,27 @@ object Singletons {
         gson.fromJson(Prefs.getString(PREF_USER, ""), User::class.java)
 
     fun getSavedConfigurationData(): ConfigurationData {
-//        return ConfigurationData(
-//            "196.6.103.18",
-//            "5016",
-//            Keys.posvasLiveKey1,
-//            Keys.posvasLiveKey2
-//        )
         return ConfigurationData(
-            "196.6.103.10",
-            "55533",
-            "5D25072F04832A2329D93E4F91BA23A2",
-            "86CBCDE3B0A22354853E04521686863D"
+            "196.6.103.18",
+            "5016",
+            Keys.posvasLiveKey1,
+            Keys.posvasLiveKey2
         )
+
+        // POINTS TO NIBSS TEST ENVIRONMENT
+//        return ConfigurationData(
+//            "196.6.103.10",
+//            "55533",
+//            "5D25072F04832A2329D93E4F91BA23A2",
+//            "86CBCDE3B0A22354853E04521686863D"
+//        )
     }
 
     fun getKeyHolder(): com.danbamitale.epmslib.entities.KeyHolder? =
-        gson.fromJson(Prefs.getString(PREF_KEYHOLDER, null), com.danbamitale.epmslib.entities.KeyHolder::class.java)
+        gson.fromJson(
+            Prefs.getString(PREF_KEYHOLDER, null),
+            com.danbamitale.epmslib.entities.KeyHolder::class.java
+        )
 
     fun getConfigData(): ConfigData? =
         gson.fromJson(Prefs.getString(PREF_CONFIG_DATA, null), ConfigData::class.java)
