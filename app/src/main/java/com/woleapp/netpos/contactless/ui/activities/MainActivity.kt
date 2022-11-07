@@ -14,6 +14,8 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -33,7 +35,7 @@ import com.pixplicity.easyprefs.library.Prefs
 import com.visa.app.ttpkernel.ContactlessKernel
 import com.woleapp.netpos.contactless.R
 import com.woleapp.netpos.contactless.app.NetPosApp
-import com.woleapp.netpos.contactless.databinding.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.databinding.*
 import com.woleapp.netpos.contactless.model.QrTransactionResponseFinalModel
 import com.woleapp.netpos.contactless.model.User
 import com.woleapp.netpos.contactless.mqtt.MqttHelper
@@ -45,7 +47,8 @@ import com.woleapp.netpos.contactless.taponphone.visa.LiveNfcTransReceiver
 import com.woleapp.netpos.contactless.taponphone.visa.NfcPaymentType
 import com.woleapp.netpos.contactless.ui.dialog.PasswordDialog
 import com.woleapp.netpos.contactless.ui.fragments.DashboardFragment
-import com.woleapp.netpos.contactless.util.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.ui.fragments.LoginFragment
+import com.woleapp.netpos.contactless.util.*
 import com.woleapp.netpos.contactless.util.AppConstants.IS_QR_TRANSACTION
 import com.woleapp.netpos.contactless.util.AppConstants.WRITE_PERMISSION_REQUEST_CODE
 import com.woleapp.netpos.contactless.util.Mappers.mapTransactionResponseToQrTransaction
@@ -270,7 +273,11 @@ class MainActivity @Inject constructor() :
             create()
         }
         val user = gson.fromJson(Prefs.getString(PREF_USER, ""), User::class.java)
-        binding.dashboardHeader.username.text = user.business_name
+        try {
+            binding.dashboardHeader.username.text = user.business_name
+        } catch (e: Exception) {
+            logout()
+        }
         binding.dashboardHeader.logout.setOnClickListener {
             logout()
         }
@@ -360,37 +367,39 @@ class MainActivity @Inject constructor() :
 
         viewModel.showPrintDialog.observe(this) { event ->
             event.getContentIfNotHandled()?.let {
-                when (Prefs.getString(PREF_PRINTER_SETTINGS, "nothing_is_there")) {
-                    PREF_VALUE_PRINT_DOWNLOAD -> {
-                        downloadPdfImpl()
-                        showSnackBar(
-                            binding.root,
-                            getString(R.string.fileDownloaded)
-                        )
-                    }
-                    PREF_VALUE_PRINT_SHARE -> {
-                        downloadPdfImpl()
-                        sharePdf(receiptPdf, this)
-                    }
-                    PREF_VALUE_PRINT_DOWNLOAD_AND_SHARE -> {
-                        downloadPdfImpl()
-                        showSnackBar(
-                            binding.root,
-                            getString(R.string.fileDownloaded)
-                        )
-                        sharePdf(receiptPdf, this)
-                    }
-                    else -> {
-                        receiptAlertDialog.apply {
-                            receiptDialogBinding.transactionContent.text = it
-                            show()
+                Handler(Looper.getMainLooper()).postDelayed({
+                    when (Prefs.getString(PREF_PRINTER_SETTINGS, "nothing_is_there")) {
+                        PREF_VALUE_PRINT_DOWNLOAD -> {
+                            downloadPdfImpl()
+                            showSnackBar(
+                                binding.root,
+                                getString(R.string.fileDownloaded)
+                            )
                         }
-                        receiptDialogBinding.apply {
-                            progress.visibility = View.GONE
-                            sendButton.isEnabled = true
+                        PREF_VALUE_PRINT_SHARE -> {
+                            downloadPdfImpl()
+                            sharePdf(receiptPdf, this)
+                        }
+                        PREF_VALUE_PRINT_SMS -> {
+                            receiptAlertDialog.apply {
+                                receiptDialogBinding.transactionContent.text = it
+                                show()
+                            }
+                            receiptDialogBinding.apply {
+                                progress.visibility = View.GONE
+                                sendButton.isEnabled = true
+                            }
+                        }
+                        else -> {
+                            downloadPdfImpl()
+                            showSnackBar(
+                                binding.root,
+                                getString(R.string.fileDownloaded)
+                            )
+                            sharePdf(receiptPdf, this)
                         }
                     }
-                }
+                }, 1000)
             }
         }
         waitingDialog.setOnDismissListener {
@@ -596,15 +605,7 @@ class MainActivity @Inject constructor() :
                 downloadPflImplForQrTransaction(qrTransaction)
                 sharePdf(receiptPdf, this)
             }
-            PREF_VALUE_PRINT_DOWNLOAD_AND_SHARE -> {
-                downloadPflImplForQrTransaction(qrTransaction)
-                showSnackBar(
-                    binding.root,
-                    getString(R.string.fileDownloaded)
-                )
-                sharePdf(receiptPdf, this)
-            }
-            else -> {
+            PREF_VALUE_PRINT_SMS -> {
                 receiptAlertDialog.apply {
                     receiptDialogBinding.transactionContent.text =
                         qrTransaction.buildSMSTextForQrTransaction()
@@ -614,6 +615,14 @@ class MainActivity @Inject constructor() :
                     progress.visibility = View.GONE
                     sendButton.isEnabled = true
                 }
+            }
+            else -> {
+                downloadPflImplForQrTransaction(qrTransaction)
+                showSnackBar(
+                    binding.root,
+                    getString(R.string.fileDownloaded)
+                )
+                sharePdf(receiptPdf, this)
             }
         }
     }

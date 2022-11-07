@@ -32,7 +32,6 @@ class RegistrationViewModel : ViewModel() {
     val message: LiveData<Event<String>>
         get() = _message
 
-
     fun register() {
         if (registrationModel.value?.allFieldsFilled() == false) {
             _message.value = Event("All fields are required")

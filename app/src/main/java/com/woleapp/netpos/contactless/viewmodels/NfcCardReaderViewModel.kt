@@ -291,7 +291,7 @@ class NfcCardReaderViewModel @Inject constructor() : ViewModel() {
             track2,
             iccData,
             StringUtils.leftPad(panSequence, 3, "0"),
-            "051"
+            "073"
         )
         Timber.e("got here nau, haba")
         iccCardHelper.cardData = cardData

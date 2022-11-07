@@ -18,7 +18,7 @@ import androidx.lifecycle.LiveData
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.woleapp.netpos.contactless.R
-import com.woleapp.netpos.contactless.model.*
+import com.woleapp.netpos.contactless.model.* // ktlint-disable no-wildcard-imports
 import com.woleapp.netpos.contactless.ui.dialog.LoadingDialog
 import com.woleapp.netpos.contactless.util.AppConstants.STRING_LOADING_DIALOG_TAG
 import java.text.ParseException
@@ -60,6 +60,16 @@ object RandomPurposeUtil {
             e.printStackTrace()
             0
         }
+    }
+
+    fun generateRandomRrn(length: Int): String {
+        val random = Random()
+        var digits = ""
+        digits += (random.nextInt(9) + 1).toString()
+        for (i in 1 until length) {
+            digits += (random.nextInt(10) + 0).toString()
+        }
+        return digits
     }
 
     @Throws(IndexOutOfBoundsException::class)

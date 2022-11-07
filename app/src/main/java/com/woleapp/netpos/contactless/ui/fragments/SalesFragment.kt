@@ -206,24 +206,6 @@ class SalesFragment : BaseFragment() {
         return binding.root
     }
 
-    /*private fun quickPay() {
-        viewModel.setAccountType(IsoAccountType.SAVINGS)
-        viewModel.setCardScheme("Master Card")
-        viewModel.setCustomerName("SUBAIR/BABATUNDE")
-        viewModel.cardData = CardData(
-            track2Data = "5399834599607066D22032210014182625",
-            nibssIccSubset = "9F2608F564EF96AC6AFE8F9F2701809F10120110A04003220000000000000000000000FF9F3704BAD5E42A9F3602030A950500000480009A032012039C01009F02060000000010005F2A020566820239009F1A0205669F34034203009F3303E068C89F3501229F1E0842313739314531588407A00000000410109F090200029F03060000000000005F340101",
-            panSequenceNumber = "001",
-            posEntryMode = "051"
-        ).apply {
-            pinBlock = TripleDES.encrypt(
-                "0420BDCBA669F8F9",
-                NetPosTerminalConfig.getKeyHolder()!!.clearPinKey
-            )
-        }
-        viewModel.makePayment(requireContext(), transactionType)
-    }*/
-
     private fun showSnackBar(message: String) {
         if (message == "Transaction not approved") {
             AlertDialog.Builder(requireContext())

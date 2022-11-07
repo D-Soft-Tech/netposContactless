@@ -99,6 +99,7 @@
                             android:id="@+id/confirmation_tvNo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginRight="@dimen/dimen_50dp"
                             android:layout_toLeftOf="@+id/confirmation_tvYes"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:clickable="true"

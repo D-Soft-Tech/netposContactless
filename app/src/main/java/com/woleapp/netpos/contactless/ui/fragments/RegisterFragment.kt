@@ -1,5 +1,6 @@
 package com.woleapp.netpos.contactless.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import com.woleapp.netpos.contactless.R
 import com.woleapp.netpos.contactless.databinding.FragmentRegisterBinding
+import com.woleapp.netpos.contactless.ui.activities.MainActivity
 import com.woleapp.netpos.contactless.viewmodels.RegistrationViewModel
 
 class RegisterFragment : BaseFragment() {
@@ -44,8 +46,8 @@ class RegisterFragment : BaseFragment() {
             .setTitle("Registration Status")
             .setCancelable(false)
             .setPositiveButton("Continue") { d, _ ->
-                d.cancel()
-                requireActivity().onBackPressed()
+                val intent = Intent(requireActivity(), MainActivity::class.java)
+                startActivity(intent)
             }
             .setMessage("Business Info Received, our team will contact you in 2 Business Days")
             .create()
@@ -54,7 +56,8 @@ class RegisterFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setSpinner()
+//        setSpinner()
+        viewModel.setSelectedBank("011")
     }
 
     private fun setSpinner() {

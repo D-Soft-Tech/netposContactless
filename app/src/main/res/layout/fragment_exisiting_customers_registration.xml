@@ -124,9 +124,6 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/edittext_bg"
                         android:drawablePadding="8dp"
-                        android:gravity="top"
-                        android:inputType="textMultiLine"
-                        android:minLines="3"
                         android:textColor="@android:color/black"
                         android:textColorHint="@android:color/black"
                         android:textSize="15sp" />

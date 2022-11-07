@@ -6,13 +6,13 @@ data class RegistrationModel(
     var businessAddress: String,
     var phoneNumber: String,
     var bank: String,
-    var email: String,
+    var username: String,
     var isRegistered: Boolean = true
 ) {
     constructor() : this("", "", "", "", "", "")
 
     fun allFieldsFilled() =
-        businessName.isNotEmpty() && contactInformation.isNotEmpty() && businessAddress.isNotEmpty() && phoneNumber.isNotEmpty() && bank.isNotEmpty() && email.isNotEmpty()
+        businessName.isNotEmpty() && contactInformation.isNotEmpty() && businessAddress.isNotEmpty() && phoneNumber.isNotEmpty() && bank.isNotEmpty() && username.isNotEmpty()
 
 }
 

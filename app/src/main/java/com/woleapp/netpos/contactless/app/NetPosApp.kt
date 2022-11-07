@@ -3,6 +3,8 @@ package com.woleapp.netpos.contactless.app
 import android.app.Activity
 import android.app.Application
 import android.content.ContextWrapper
+import android.os.Bundle
+import android.view.WindowManager
 import com.mastercard.terminalsdk.ConfigurationInterface
 import com.mastercard.terminalsdk.TerminalSdk
 import com.mastercard.terminalsdk.TransactionInterface
@@ -35,6 +37,7 @@ class NetPosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // registerListener() // Disable Screenshot and screen recording
         assignInstance(this)
         Timber.plant(Timber.DebugTree())
         Prefs.Builder()
@@ -84,7 +87,8 @@ class NetPosApp : Application() {
         val merchantByte = mercahnt.toByteArray()
         myData["9F4E"] = merchantByte // Merchant Name and location
         myData["9F1B"] = byteArrayOf(0x00, 0x00, 0x00, 0x00) // terminal floor limit
-        myData["DF01"] = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x01) // Reader CVM Required Limit
+        myData["DF01"] =
+            byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x01) // Reader CVM Required Limit
         contactlessConfiguration.terminalData = myData
     }
 
@@ -117,5 +121,35 @@ class NetPosApp : Application() {
             )
         transactionsApi = configuration.initializeLibrary()
         configuration.selectProfile("MPOS")
+    }
+
+    private fun registerListener() {
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                // Disable taking screenshot or video recording
+                activity.window.setFlags(
+                    WindowManager.LayoutParams.FLAG_SECURE,
+                    WindowManager.LayoutParams.FLAG_SECURE
+                )
+            }
+
+            override fun onActivityStarted(activity: Activity) {
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+            }
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+            }
+
+            override fun onActivityDestroyed(activity: Activity) {
+            }
+        })
     }
 }
