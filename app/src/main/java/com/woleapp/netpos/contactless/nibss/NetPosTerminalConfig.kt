@@ -35,16 +35,17 @@ class NetPosTerminalConfig {
         private var configurationData: ConfigurationData = getSavedConfigurationData()
         private val disposables = CompositeDisposable()
 
-        //        var connectionData: ConnectionData = ConnectionData(
-//            ipAddress = "196.6.103.10",
-//            ipPort = 55533,
-//            isSSL = true
-//        )
         var connectionData: ConnectionData = ConnectionData(
-            ipAddress = configurationData.ip,
-            ipPort = configurationData.port.toInt(),
+            ipAddress = "196.6.103.10",
+            ipPort = 55533,
             isSSL = true
         )
+
+//        var connectionData: ConnectionData = ConnectionData(
+//            ipAddress = configurationData.ip,
+//            ipPort = configurationData.port.toInt(),
+//            isSSL = true
+//        )
         private var terminalId: String? = null
         var isConfigurationInProcess = false
         var configurationStatus = -1
@@ -59,8 +60,8 @@ class NetPosTerminalConfig {
         fun getTerminalId() = terminalId ?: ""
 
         private fun setTerminalId() {
-            terminalId = Singletons.getCurrentlyLoggedInUser()?.terminal_id
-            // terminalId = "20398A4C"      // NIBSS TEST ENVIRONMENT
+//            terminalId = Singletons.getCurrentlyLoggedInUser()?.terminal_id
+            terminalId = "20398A4C" // NIBSS TEST ENVIRONMENT
         }
 
         private var keyHolder: KeyHolder? = null

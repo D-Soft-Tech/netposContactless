@@ -7,6 +7,9 @@ import android.nfc.tech.IsoDep
 import android.nfc.tech.MifareClassic
 import android.nfc.tech.MifareUltralight
 import android.nfc.tech.NfcA
+import com.woleapp.netpos.contactless.taponphone.tlv.BerTag
+import com.woleapp.netpos.contactless.taponphone.tlv.BerTlvParser
+import com.woleapp.netpos.contactless.taponphone.tlv.HexUtil
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
@@ -144,3 +147,24 @@ fun getCurrentDateTimeAsFormattedString(): String {
     ).replace(":", "_")
         .replace("-", "_").replace(" ", "_at_")
 }
+
+// MTIP
+fun setField59(aid: String): String {
+    val additionalTagManipulation =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?><AdditionalEmvTags><EmvTag><TagId>84</TagId><TagValue>$aid</TagValue></EmvTag></AdditionalEmvTags>"
+    val len = additionalTagManipulation.length.toString()
+    val lengthOfLength = len.length
+
+    return "127.22:216MPOS_DEVICE_TYPE111217AdditionalEmvTags${lengthOfLength}${additionalTagManipulation.length}$additionalTagManipulation"
+}
+
+fun getWithTag(tag: String, iccData: String): String? {
+    return try {
+        val tlvList = BerTlvParser().parse(HexUtil.parseHex(iccData))
+        tlvList.find(BerTag(tag)).hexValue
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+// MTIP

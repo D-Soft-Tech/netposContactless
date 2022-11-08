@@ -122,8 +122,19 @@ class SalesViewModel @Inject constructor() : ViewModel() {
                 accountType = isoAccountType!!
             )
         val processor = TransactionProcessor(hostConfig)
+
+        // MTIP
+
+        // MTIP
+
         transactionState.value = STATE_PAYMENT_STARTED
-        processor.processTransaction(context, requestData, cardData!!)
+
+        val aid = getWithTag("84", cardData!!.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
+
+        Timber.d(field59)
+
+        processor.processTransaction(context, requestData, cardData!!, field59)
             .onErrorResumeNext {
                 processor.rollback(context, MessageReasonCode.Timeout)
             }

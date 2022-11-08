@@ -1,13 +1,16 @@
 package com.woleapp.netpos.contactless.viewmodels
 
 import android.content.Context
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.danbamitale.epmslib.entities.* // ktlint-disable no-wildcard-imports
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
+import com.danbamitale.epmslib.entities.*
 import com.danbamitale.epmslib.processors.TransactionProcessor
 import com.danbamitale.epmslib.utils.IsoAccountType
 import com.woleapp.netpos.contactless.database.AppDatabase
 import com.woleapp.netpos.contactless.nibss.NetPosTerminalConfig
-import com.woleapp.netpos.contactless.util.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.util.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -133,10 +136,14 @@ class TransactionsViewModel : ViewModel() {
             accountType = accountType
         )
         inProgress.value = true
+
+        val aid = getWithTag("84", cardData!!.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
         TransactionProcessor(hostConfig).processTransaction(
             context,
             requestData,
-            cardData!!
+            cardData!!,
+            field59
         ).flatMap {
             if (it.responseCode == "A3") {
                 _shouldRefreshNibssKeys.postValue(Event(true))
@@ -214,10 +221,15 @@ class TransactionsViewModel : ViewModel() {
         )
 
         _showProgressDialog.value = Event(true)
+
+        val aid = getWithTag("84", cardData!!.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
+
         TransactionProcessor(hostConfig).processTransaction(
             context,
             requestData,
-            cardData!!
+            cardData!!,
+            field59
         ).flatMap {
             if (it.responseCode == "A3") {
                 _shouldRefreshNibssKeys.postValue(Event(true))
@@ -264,7 +276,16 @@ class TransactionsViewModel : ViewModel() {
             originalDataElements = originalDataElements
         )
         _showProgressDialog.value = Event(true)
-        TransactionProcessor(hostConfig).processTransaction(context, requestData, cardData!!)
+
+        val aid = getWithTag("84", cardData!!.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
+
+        TransactionProcessor(hostConfig).processTransaction(
+            context,
+            requestData,
+            cardData!!,
+            field59
+        )
             .flatMap {
                 if (it.responseCode == "A3") {
                     _shouldRefreshNibssKeys.postValue(Event(true))

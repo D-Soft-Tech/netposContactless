@@ -124,6 +124,9 @@ class DashboardFragment : BaseFragment() {
         cardData: CardData,
         accountType: IsoAccountType = IsoAccountType.DEFAULT_UNSPECIFIED
     ) {
+        val aid = getWithTag("84", cardData.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
+
         if (NetPosTerminalConfig.getKeyHolder() == null) {
             Toast.makeText(requireContext(), "Terminal not configured", Toast.LENGTH_LONG).show()
             return
@@ -141,51 +144,52 @@ class DashboardFragment : BaseFragment() {
         progressDialog.show()
         val processor = TransactionProcessor(hostConfig)
         // processor.
-        val disposable = processor.processTransaction(requireContext(), requestData, cardData)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { response, error ->
-                if (progressDialog.isShowing) {
-                    progressDialog.dismiss()
-                }
-                error?.let {
-                    it.printStackTrace()
-                    Toast.makeText(
-                        requireContext(),
-                        "Error ${it.localizedMessage}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        val disposable =
+            processor.processTransaction(requireContext(), requestData, cardData, field59)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { response, error ->
+                    if (progressDialog.isShowing) {
+                        progressDialog.dismiss()
+                    }
+                    error?.let {
+                        it.printStackTrace()
+                        Toast.makeText(
+                            requireContext(),
+                            "Error ${it.localizedMessage}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
 
-                response?.let {
-                    if (it.responseCode == "A3") {
-                        Prefs.remove(PREF_CONFIG_DATA)
-                        Prefs.remove(PREF_KEYHOLDER)
-                        NetPosTerminalConfig.init(
-                            requireContext().applicationContext,
-                            configureSilently = true
+                    response?.let {
+                        if (it.responseCode == "A3") {
+                            Prefs.remove(PREF_CONFIG_DATA)
+                            Prefs.remove(PREF_KEYHOLDER)
+                            NetPosTerminalConfig.init(
+                                requireContext().applicationContext,
+                                configureSilently = true
+                            )
+                        }
+
+                        val me = it.buildSMSText("Account Balance Check")
+
+                        val messageString = if (it.isApproved) {
+                            "Account Balance:\n " + it.accountBalances.joinToString("\n") { accountBalance ->
+                                "${accountBalance.accountType}, ${
+                                accountBalance.amount.div(100).formatCurrencyAmount()
+                                }"
+                            }
+                        } else {
+                            "${it.responseMessage}(${it.responseCode})"
+                        }
+
+                        showMessage(
+                            if (it.isApproved) "Approved" else "Declined",
+                            messageString,
+                            me.toString()
                         )
                     }
-
-                    val me = it.buildSMSText("Account Balance Check")
-
-                    val messageString = if (it.isApproved) {
-                        "Account Balance:\n " + it.accountBalances.joinToString("\n") { accountBalance ->
-                            "${accountBalance.accountType}, ${
-                            accountBalance.amount.div(100).formatCurrencyAmount()
-                            }"
-                        }
-                    } else {
-                        "${it.responseMessage}(${it.responseCode})"
-                    }
-
-                    showMessage(
-                        if (it.isApproved) "Approved" else "Declined",
-                        messageString,
-                        me.toString()
-                    )
                 }
-            }
 
         // compositeDisposable.add(disposable)
     }

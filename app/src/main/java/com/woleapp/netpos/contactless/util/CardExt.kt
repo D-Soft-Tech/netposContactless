@@ -19,7 +19,6 @@ import com.woleapp.netpos.contactless.nibss.NetPosTerminalConfig
 import com.woleapp.netpos.contactless.taponphone.visa.NfcPaymentType
 import timber.log.Timber
 
-
 data class ICCCardHelper(
     var customerName: String? = null,
     var cardScheme: String? = null,
@@ -28,15 +27,15 @@ data class ICCCardHelper(
     var error: Throwable? = null
 )
 
-
 fun showCardDialog(
     context: Activity,
-    lifecycleOwner: LifecycleOwner,
+    lifecycleOwner: LifecycleOwner
 ): LiveData<Event<NfcPaymentType?>> {
     var configurationFinished = false
     val liveData: MutableLiveData<Event<NfcPaymentType?>> = MutableLiveData()
-    if (NetPosTerminalConfig.liveData.hasActiveObservers())
+    if (NetPosTerminalConfig.liveData.hasActiveObservers()) {
         NetPosTerminalConfig.liveData.removeObservers(lifecycleOwner)
+    }
     val progressDialog = ProgressDialog(context)
     progressDialog.setMessage("connecting, please wait...")
     var observer: Observer<Event<Int>>? = null
@@ -47,21 +46,24 @@ fun showCardDialog(
                 0 -> progressDialog.show()
                 1 -> {
                     configurationFinished = true
-                    if (progressDialog.isShowing)
+                    if (progressDialog.isShowing) {
                         progressDialog.dismiss()
+                    }
                     showSelectCardDialog(context, liveData)
-                    //getFakeCardLiveData(liveData)
+                    // getFakeCardLiveData(liveData)
                     NetPosTerminalConfig.liveData.removeObserver(observer!!)
                 }
                 -1 -> {
                     configurationFinished = true
-                    if (progressDialog.isShowing)
+                    if (progressDialog.isShowing) {
                         progressDialog.dismiss()
+                    }
                     if (NetPosTerminalConfig.getTerminalId().isEmpty()) {
                         Toast.makeText(context, "No TID found on account", Toast.LENGTH_SHORT)
                             .show()
-                    } else
+                    } else {
                         Toast.makeText(context, "Connection Failed", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 else -> {
                 }

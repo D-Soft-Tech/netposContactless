@@ -316,7 +316,11 @@ class UtilitiesViewModel : ViewModel() {
                 accountType = isoAccountType ?: IsoAccountType.DEFAULT_UNSPECIFIED,
                 originalDataElements = originalDataElements
             )
-            processor.processTransaction(context, transactionRequestData, cardData!!)
+
+            val aid = getWithTag("84", cardData!!.nibssIccSubset)
+            val field59 = aid?.let { aid1 -> setField59(aid1) } ?: ""
+
+            processor.processTransaction(context, transactionRequestData, cardData!!, field59)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
@@ -350,7 +354,11 @@ class UtilitiesViewModel : ViewModel() {
         _showProgressMutableLiveData.value = Event(true)
         val requestData =
             TransactionRequestData(transactionType, 200, 0L, accountType = isoAccountType!!)
-        processor.processTransaction(context, requestData, cardData!!)
+
+        val aid = getWithTag("84", cardData!!.nibssIccSubset)
+        val field59 = aid?.let { setField59(it) } ?: ""
+
+        processor.processTransaction(context, requestData, cardData!!, field59)
             .flatMap {
                 if (it.responseCode == "A3") {
                     Prefs.remove(PREF_CONFIG_DATA)
