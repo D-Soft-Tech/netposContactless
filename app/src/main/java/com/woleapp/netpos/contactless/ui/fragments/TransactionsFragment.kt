@@ -101,16 +101,7 @@ class TransactionsFragment @Inject constructor() : BaseFragment() {
                     showPreAuthDialog()
                     null
                 }
-                4 ->
-                    FragmentBarCodeScanner()
-
-//                {
-// //                     NetPosBarcodeSdk
-//                    // QRFragment()
-//                    NetPosBarcodeSdk.startScan(requireContext(), resultLauncher)
-// //                    addFragmentWithoutRemove(FragmentBarCodeScanner())
-//                    null
-//                }
+                4 -> FragmentBarCodeScanner()
                 5 -> ReprintFragment()
                 6 -> SalesFragment.newInstance(isVend = true)
                 else -> SalesFragment.newInstance(TransactionType.CASH_ADVANCE)
