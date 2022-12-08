@@ -5,11 +5,11 @@ import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.danbamitale.epmslib.entities.CardData
-import com.danbamitale.epmslib.entities.TransactionResponse
 import com.google.gson.Gson
 import com.mastercard.terminalsdk.listeners.PaymentDataProvider
 import com.mastercard.terminalsdk.utility.ByteArrayWrapper
+import com.netpluspay.nibssclient.models.CardData
+import com.netpluspay.nibssclient.models.TransactionResponse
 import com.visa.app.ttpkernel.ContactlessConfiguration
 import com.visa.app.ttpkernel.ContactlessKernel
 import com.visa.app.ttpkernel.TtpOutcome
@@ -20,7 +20,7 @@ import com.woleapp.netpos.contactless.taponphone.mastercard.listener.Transaction
 import com.woleapp.netpos.contactless.taponphone.tlv.BerTag
 import com.woleapp.netpos.contactless.taponphone.tlv.BerTlvParser
 import com.woleapp.netpos.contactless.taponphone.tlv.HexUtil
-import com.woleapp.netpos.contactless.taponphone.visa.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.taponphone.visa.*
 import com.woleapp.netpos.contactless.taponphone.visa.PPSEv21.PPSEManager
 import com.woleapp.netpos.contactless.util.Event
 import com.woleapp.netpos.contactless.util.ICCCardHelper
@@ -313,7 +313,7 @@ class NfcCardReaderViewModel @Inject constructor() : ViewModel() {
                 override fun onTransactionSuccessful() {
                 }
 
-                override fun onOnlineReferral(cardData: CardData, pan: String) {
+                override fun onOnlineReferral(cardData: CardData?, pan: String?) {
                     iccCardHelper.apply {
                         this.cardData = cardData
                         cardScheme = NfcPaymentType.MASTERCARD.name
