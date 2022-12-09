@@ -10,4 +10,9 @@
     <color name="pinButtonBackground">@color/colorPrimary</color>
     <color name="colorError">#ffff4b55</color>
     <color name="colorDivider">#ffe6ebf3</color>
+    <color name="transparent_black">#73000000</color>
+    <color name="success">#1A9211</color>
+    <color name="failed">#F01808</color>
+    <color name="error_color_2">#e06666</color>
+    <color name="attention">#fc4f05</color>
 </resources>

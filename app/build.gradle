@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'com.google.gms.google-services'
 
 
 def appPropertiesFile = rootProject.file("app-settings.properties")
@@ -22,18 +24,18 @@ android {
             storePassword keystoreProperties['storePassword']
         }
     }
-    compileSdkVersion 30
+    compileSdkVersion 32
     buildToolsVersion "29.0.3"
     buildFeatures.dataBinding = true
     ndkVersion "21.3.6528147"
     defaultConfig {
-        resValue "string", "app_name", "NetPOS"
+        resValue "string", "app_name", "NetPOS Contactless"
         vectorDrawables.useSupportLibrary = true
-        applicationId "com.woleapp.netpos"
-        minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 56
-        versionName "1.1.56"
+        applicationId "com.woleapp.netpos.contactless"
+        minSdkVersion 23
+        targetSdkVersion 32
+        versionCode 10
+        versionName "1.0.10"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def environmentPath
         if (appModeProd == "true")
@@ -47,6 +49,22 @@ android {
         for (String key : envProperties.keySet()) {
             buildConfigField "String", key.replaceAll("\\.", "_").toUpperCase(), envProperties[key]
         }
+        Properties prop = new Properties();
+        prop.load(rootProject.file("local.properties").newDataInputStream())
+
+        buildConfigField("String", "STRING_AUTH_USER_NAME", "\"${prop.getProperty("STRING_AUTH_USER_NAME")}\"")
+        buildConfigField("String", "STRING_AUTH_PASSWORD", "\"${prop.getProperty("STRING_AUTH_PASSWORD")}\"")
+        buildConfigField("String", "STRING_GET_QR_BASE_URL", "\"${prop.getProperty("STRING_GET_QR_BASE_URL")}\"")
+        buildConfigField("String", "STRING_MERCHANT_ID", "\"${prop.getProperty("STRING_MERCHANT_ID")}\"")
+        buildConfigField("String", "STRING_SEND_VERVE_OTP_BASE_URL", "\"${prop.getProperty("STRING_SEND_VERVE_OTP_BASE_URL")}\"")
+        buildConfigField("String", "STRING_MPGS_TAG", "\"${prop.getProperty("STRING_MPGS_TAG")}\"")
+
+        buildConfigField("String", "STRING_WEB_VIEW_BASE_URL", "\"${prop.get("STRING_WEB_VIEW_BASE_URL")}\"")
+        buildConfigField("String", "STRING_CONTACTLESS_EXISTING_BASE_URL", "\"${prop.getProperty("STRING_CONTACTLESS_EXISTING_BASE_URL")}\"")
+    }
+
+    dataBinding {
+        enabled = true
     }
 
     buildTypes {
@@ -54,14 +72,15 @@ android {
             signingConfig signingConfigs.netpos_signing_config
             buildConfigField "String", "BUILD_VARIANT", "\"debug\""
             ndk {
-                abiFilters "armeabi-v7a", "x86"
+                abiFilters "armeabi-v7a", "x86", "x86_64"
             }
             resValue "string", "app_name", "NetPOS Debug"
+            applicationIdSuffix ".debug"
         }
         release {
             signingConfig signingConfigs.netpos_signing_config
             buildConfigField "String", "BUILD_VARIANT", "\"release\""
-            resValue "string", "app_name", "NetPOS"
+            resValue "string", "app_name", "NetPOS Contactless"
             debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -79,6 +98,58 @@ android {
             applicationIdSuffix ".releaseAdmin"
         }
     }
+
+    flavorDimensions "whiteLabel"
+    productFlavors {
+        netpos {
+            dimension "whiteLabel"
+        }
+        firstbank {
+            dimension "whiteLabel"
+            applicationIdSuffix ".firstbank"
+        }
+        providus {
+            dimension "whiteLabel"
+            applicationIdSuffix ".providus"
+        }
+        wemabank {
+            dimension "whiteLabel"
+            applicationIdSuffix ".wemabank"
+        }
+        fcmb {
+            dimension "whiteLabel"
+            applicationIdSuffix ".fcmb"
+        }
+        zenith {
+            dimension "whiteLabel"
+            applicationIdSuffix ".zenith"
+        }
+    }
+    variantFilter { variant ->
+        def name_types = variant.flavors*.name
+        def name = name_types.join()
+        if (variant.buildType.name == "release" && name.contains("nibssserverdebug") || variant.buildType.name == "release" && name.contains("releaseAdmin")) {
+            setIgnore(true)
+        }
+        if (variant.buildType.name == "debug" && name.contains("nibssserverdebug") || variant.buildType.name == "debug" && name.contains("releaseAdmin")) {
+            setIgnore(true)
+        }
+    }
+
+
+    sourceSets {
+        netpos {
+            java.srcDirs('src/default/java')
+        }
+        firstbank {
+            java.srcDirs('src/default/java')
+        }
+        providus {
+            java.srcDirs('src/default/java')
+        }
+    }
+
+
     compileOptions {
         coreLibraryDesugaringEnabled true
         targetCompatibility JavaVersion.VERSION_1_8
@@ -91,12 +162,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
 }
 
 dependencies {
+    def lottieVersion = "5.2.0"
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation("commons-codec:commons-codec:1.15")
     implementation("commons-lang:commons-lang:2.6")
@@ -113,8 +184,9 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation "io.reactivex.rxjava2:rxkotlin:2.4.0"
 
-    //nibss-client
-    implementation "com.netpluspay.android.nibssclient:nibss-client:1.1.7"
+    //epms
+    implementation project(path: ':epmslib-release')
+    implementation 'net.sf.j8583:j8583:1.12.0'
 
     //Timber
     implementation 'com.jakewharton.timber:timber:4.7.1'
@@ -131,11 +203,32 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
     implementation "androidx.room:room-rxjava2:$room_version"
 
+    // OTP VIEWS
+//    implementation "com.github.mukeshsolanki:android-otpview-pinview:2.1.2"
+    implementation "io.github.chaosleung:pinview:$pin_view"
+
+    // BarCode Scanner Library
+    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+
     //retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
+
+    // Hilt
+    implementation "com.google.dagger:hilt-android:2.38.1"
+    kapt "com.google.dagger:hilt-compiler:2.38.1"
+
+    // For viewModel
+    implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
+    kapt "androidx.hilt:hilt-compiler:1.0.0"
+
+    // Activity KTX for viewModels()
+    implementation "androidx.activity:activity-ktx:1.5.1"
+
+    // Lifecycles only (without ViewModel or LiveData)
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
 
     //easyprefs
     implementation 'com.pixplicity.easyprefs:library:1.9.0'
@@ -154,24 +247,36 @@ dependencies {
     implementation 'net.sourceforge.streamsupport:android-retrofuture:1.7.2'
 
     implementation 'pub.devrel:easypermissions:3.0.0'
-    implementation 'com.google.zxing:core:3.4.0'
+    implementation 'com.google.zxing:core:3.4.1'
 
 //    //Eclipse MQTT
 //    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
 //    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
     //glide
-    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
 
     //paging
     implementation "androidx.paging:paging-runtime:2.1.2"
 
     //preference
-    implementation("androidx.preference:preference-ktx:1.1.1")
+    implementation("androidx.preference:preference-ktx:1.2.0")
+
+    //lottie
+    implementation 'com.airbnb.android:lottie:5.2.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
+
+    // Lootie
+    implementation "com.airbnb.android:lottie:$lottieVersion"
+
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.0.8'
+
+    // Alerter
+    implementation 'com.tapadoo.android:alerter:2.0.4'
+
 }
