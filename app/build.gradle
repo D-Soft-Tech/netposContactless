@@ -33,7 +33,7 @@ android {
         vectorDrawables.useSupportLibrary = true
         applicationId "com.woleapp.netpos.contactless"
         minSdkVersion 23
-        targetSdkVersion 30
+        targetSdkVersion 32
         versionCode 10
         versionName "1.0.10"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -186,7 +186,6 @@ dependencies {
 
     //epms
     implementation project(path: ':epmslib-release')
-    implementation project(path: ':nibssDirect')
     implementation 'net.sf.j8583:j8583:1.12.0'
 
     //Timber

@@ -5,11 +5,11 @@ import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.danbamitale.epmslib.entities.CardData
+import com.danbamitale.epmslib.entities.TransactionResponse
 import com.google.gson.Gson
 import com.mastercard.terminalsdk.listeners.PaymentDataProvider
 import com.mastercard.terminalsdk.utility.ByteArrayWrapper
-import com.netpluspay.nibssclient.models.CardData
-import com.netpluspay.nibssclient.models.TransactionResponse
 import com.visa.app.ttpkernel.ContactlessConfiguration
 import com.visa.app.ttpkernel.ContactlessKernel
 import com.visa.app.ttpkernel.TtpOutcome

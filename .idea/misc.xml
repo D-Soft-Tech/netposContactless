@@ -5,6 +5,7 @@
       <map>
         <entry key="app/src/firstbank/res/layout/dashboard_header.xml" value="0.25" />
         <entry key="app/src/firstbank/res/layout/fragment_login.xml" value="0.23072916666666668" />
+        <entry key="app/src/main/res/layout/activity_authentication.xml" value="0.3098958333333333" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.2947916666666667" />
         <entry key="app/src/main/res/layout/dialog_account_number_layout.xml" value="0.23072916666666668" />
         <entry key="app/src/main/res/layout/fragment_exisiting_customers_registration.xml" value="0.25" />

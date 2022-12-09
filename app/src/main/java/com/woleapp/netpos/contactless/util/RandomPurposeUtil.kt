@@ -19,6 +19,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.woleapp.netpos.contactless.R
 import com.woleapp.netpos.contactless.model.* // ktlint-disable no-wildcard-imports
+import com.woleapp.netpos.contactless.taponphone.tlv.BerTag
+import com.woleapp.netpos.contactless.taponphone.tlv.BerTlvParser
+import com.woleapp.netpos.contactless.taponphone.tlv.HexUtil
 import com.woleapp.netpos.contactless.ui.dialog.LoadingDialog
 import com.woleapp.netpos.contactless.util.AppConstants.STRING_LOADING_DIALOG_TAG
 import java.text.ParseException
@@ -142,6 +145,26 @@ object RandomPurposeUtil {
         activity.currentFocus?.let { view ->
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             imm?.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
+    // MTIP
+    fun setField59(aid: String): String {
+        val additionalTagManipulation =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><AdditionalEmvTags><EmvTag><TagId>84</TagId><TagValue>$aid</TagValue></EmvTag></AdditionalEmvTags>"
+        val len = additionalTagManipulation.length.toString()
+        val lengthOfLength = len.length
+
+        return "216MPOS_DEVICE_TYPE111217AdditionalEmvTags${lengthOfLength}${additionalTagManipulation.length}$additionalTagManipulation"
+    }
+
+    fun getWithTag(tag: String, iccData: String): String? {
+        return try {
+            val tlvList = BerTlvParser().parse(HexUtil.parseHex(iccData))
+            tlvList.find(BerTag(tag)).hexValue
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
